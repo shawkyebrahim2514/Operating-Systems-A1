@@ -1,3 +1,6 @@
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 class Parser {
@@ -40,23 +43,43 @@ class Parser {
 
 public class Terminal {
     static Parser parser;
+    static Path currentDirectory;
 
     // Implement each command in a method, for example:
-    public String echo(String str) {
-        return null;
+    public static String echo(String str) {
+        return str;
     }
 
-    public String pwd() {
-        throw new Error("snbdfjsaf");
-        // return null;
+    public static String pwd() {
+        return currentDirectory.toString();
     }
 
-    public void cd() {
-
+    public static void cd() {
+        currentDirectory = Paths.get(System.getProperty("user.home"));
     }
 
-    public void cd(String arg) {
-
+    public static void cd(String arg) {
+        if (arg.equals("..")) {
+            Path parentPath = currentDirectory.getParent();
+            if (parentPath == null) {
+                throw new Error("You are already in the root directory");
+            }
+            currentDirectory = parentPath;
+        } else {
+            Path tempPath;
+            if (!arg.contains(":")) {
+                // Absolute path
+                tempPath = Paths.get(currentDirectory.toString(), arg);
+            } else {
+                // Relative path
+                tempPath = Paths.get(arg);
+            }
+            if (Files.exists(tempPath) && Files.isDirectory(tempPath)) {
+                currentDirectory = tempPath.normalize().toAbsolutePath();
+            } else {
+                throw new Error("Directory not found");
+            }
+        }
     }
 
     public String[] ls() {
@@ -107,45 +130,60 @@ public class Terminal {
     }
 
     public static void main(String[] args) {
+        currentDirectory = Paths.get(System.getProperty("user.dir"));
         Scanner scanner = new Scanner(System.in);
-        String input = scanner.nextLine();
         parser = new Parser();
-        parser.parse(input);
-        try {
-            switch (parser.getCommandName()) {
-                case "echo":
-                break;
-                case "pwd":
-                break;
-                case "cd":
-                break;
-                case "ls":
-                break;
-                case "ls_r":
-                break;
-                case "mkdir":
-                break; 
-                case "rmdir":
-                break;
-                case "touch":
-                break;
-                case "cp":
-                break;
-                case "cp_r":
-                break;
-                case "rm":
-                break;
-                case "cat":
-                break;
-                case "history":
-                break;
-                case "exit":
-                break;
-                default:
-                throw new Error("Command not found");
+        while (true) {
+            String input = scanner.nextLine();
+            parser.parse(input);
+            try {
+                switch (parser.getCommandName()) {
+                    case "echo":
+                        if (parser.getArgs() == null) {
+                            throw new Error("Missing argument");
+                        }
+                        System.out.println("> " + echo(parser.getArgs()[0]));
+                        break;
+                    case "pwd":
+                        System.out.println("> " + pwd());
+                        break;
+                    case "cd":
+                        if (parser.getArgs() == null) {
+                            cd();
+                        } else {
+                            cd(parser.getArgs()[0]);
+                        }
+                        System.out.println("> Current directory: " + currentDirectory.toString());
+                        break;
+                    case "ls":
+                        break;
+                    case "ls_r":
+                        break;
+                    case "mkdir":
+                        break;
+                    case "rmdir":
+                        break;
+                    case "touch":
+                        break;
+                    case "cp":
+                        break;
+                    case "cp_r":
+                        break;
+                    case "rm":
+                        break;
+                    case "cat":
+                        break;
+                    case "history":
+                        break;
+                    case "exit":
+                        scanner.close();
+                        return;
+                    default:
+                        throw new Error("Command not found");
+                }
+            } catch (Error error) {
+                System.out.println("> " + error.getMessage());
             }
-        } catch (Error error) {
-            System.out.println(error.getMessage());
         }
     }
 }
