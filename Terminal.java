@@ -1,3 +1,4 @@
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -82,12 +83,13 @@ public class Terminal {
         }
     }
 
-    public String[] ls() {
-        return null;
-    }
-
-    public String[] ls_r() {
-        return null;
+    public static String[] ls() {
+        File f = new File(currentDirectory.toString());
+        File[] matchingFiles = f.listFiles();
+        String[] result = new String[matchingFiles.length];
+        for (int i = 0; i < matchingFiles.length; i++)
+            result[i] = matchingFiles[i].toString();
+        return result;
     }
 
     public void mkdir(String[] args) {
@@ -156,8 +158,17 @@ public class Terminal {
                         System.out.println("> Current directory: " + currentDirectory.toString());
                         break;
                     case "ls":
+                        String[] paths = ls();
+                        for (String path : paths
+                        ) {
+                            System.out.println(path);
+                        }
                         break;
                     case "ls_r":
+                        paths = ls();
+                        for (int i = paths.length-1; i >= 0; i--) {
+                            System.out.println(paths[i]);
+                        }
                         break;
                     case "mkdir":
                         break;
