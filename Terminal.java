@@ -105,6 +105,7 @@ public class Terminal {
             arg = currentDirectory.toString()+arg;
         }
         File f = new File(arg);
+        f.createNewFile();
     }
 
     public void cp(String first, String second) {
