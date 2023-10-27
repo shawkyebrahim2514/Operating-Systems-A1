@@ -206,10 +206,8 @@ public class Terminal {
                     default:
                         throw new Error("Command not found");
                 }
-            } catch (Error error) {
+            } catch (Error | IOException error) {
                 System.out.println("> " + error.getMessage());
-            } catch (IOException e) {
-                System.out.println("> " + e.getMessage());
             }
         }
     }
