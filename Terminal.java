@@ -90,7 +90,7 @@ public class Terminal {
         File[] matchingFiles = f.listFiles();
         String[] result = new String[matchingFiles.length];
         for (int i = 0; i < matchingFiles.length; i++)
-            result[i] = matchingFiles[i].toString();
+            result[i] = matchingFiles[i].getName();
         return result;
     }
 
@@ -102,7 +102,7 @@ public class Terminal {
 
     public static void touch(String arg) throws IOException {
         if(!arg.contains(":")){
-            arg = currentDirectory.toString()+arg;
+            arg = Paths.get(currentDirectory.toString(), arg).toString();
         }
         File f = new File(arg);
         try {
