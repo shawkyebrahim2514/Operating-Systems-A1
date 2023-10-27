@@ -3,6 +3,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import java.util.Vector;
 
 class Parser {
     // Take care of this case: echo -r
@@ -118,10 +119,6 @@ public class Terminal {
         return null;
     }
 
-    public String[] history() {
-        return null;
-    }
-
     public void exit() {
     }
 
@@ -134,9 +131,11 @@ public class Terminal {
     public static void main(String[] args) {
         currentDirectory = Paths.get(System.getProperty("user.dir"));
         Scanner scanner = new Scanner(System.in);
+        Vector<String> history = new Vector<String>();
         parser = new Parser();
         while (true) {
             String input = scanner.nextLine();
+            history.add(input);
             parser.parse(input);
             try {
                 switch (parser.getCommandName()) {
@@ -185,6 +184,9 @@ public class Terminal {
                     case "cat":
                         break;
                     case "history":
+                        for (int i = 0; i < history.size(); i++){
+                            System.out.println(i+1+". "+history.get(i));
+                        }
                         break;
                     case "exit":
                         scanner.close();
