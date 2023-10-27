@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -99,7 +100,11 @@ public class Terminal {
     public void rmdir(String arg) {
     }
 
-    public void touch(String arg) {
+    public static void touch(String arg) throws IOException {
+        if(!arg.contains(":")){
+            arg = currentDirectory.toString()+arg;
+        }
+        File f = new File(arg);
     }
 
     public void cp(String first, String second) {
@@ -174,6 +179,7 @@ public class Terminal {
                     case "rmdir":
                         break;
                     case "touch":
+                        touch(parser.getArgs()[0]);
                         break;
                     case "cp":
                         break;
@@ -196,6 +202,8 @@ public class Terminal {
                 }
             } catch (Error error) {
                 System.out.println("> " + error.getMessage());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }
