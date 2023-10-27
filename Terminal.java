@@ -105,7 +105,12 @@ public class Terminal {
             arg = currentDirectory.toString()+arg;
         }
         File f = new File(arg);
-        f.createNewFile();
+        try {
+            f.createNewFile();
+        }
+        catch (IOException error){
+            throw new IOException("Couldn't create file");
+        }
     }
 
     public void cp(String first, String second) {
@@ -204,7 +209,7 @@ public class Terminal {
             } catch (Error error) {
                 System.out.println("> " + error.getMessage());
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                System.out.println("> " + e.getMessage());
             }
         }
     }
