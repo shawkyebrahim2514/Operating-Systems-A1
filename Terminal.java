@@ -1,7 +1,10 @@
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import java.util.Vector;
 
 class Parser {
     // Take care of this case: echo -r
@@ -82,12 +85,13 @@ public class Terminal {
         }
     }
 
-    public String[] ls() {
-        return null;
-    }
-
-    public String[] ls_r() {
-        return null;
+    public static String[] ls() {
+        File f = new File(currentDirectory.toString());
+        File[] matchingFiles = f.listFiles();
+        String[] result = new String[matchingFiles.length];
+        for (int i = 0; i < matchingFiles.length; i++)
+            result[i] = matchingFiles[i].getName();
+        return result;
     }
 
     public void mkdir(String[] args) {
@@ -96,7 +100,17 @@ public class Terminal {
     public void rmdir(String arg) {
     }
 
-    public void touch(String arg) {
+    public static void touch(String arg) throws IOException {
+        if(!arg.contains(":")){
+            arg = Paths.get(currentDirectory.toString(), arg).toString();
+        }
+        File f = new File(arg);
+        try {
+            f.createNewFile();
+        }
+        catch (IOException error){
+            throw new IOException("Couldn't create file");
+        }
     }
 
     public void cp(String first, String second) {
@@ -116,10 +130,6 @@ public class Terminal {
         return null;
     }
 
-    public String[] history() {
-        return null;
-    }
-
     public void exit() {
     }
 
@@ -132,9 +142,11 @@ public class Terminal {
     public static void main(String[] args) {
         currentDirectory = Paths.get(System.getProperty("user.dir"));
         Scanner scanner = new Scanner(System.in);
+        Vector<String> history = new Vector<String>();
         parser = new Parser();
         while (true) {
             String input = scanner.nextLine();
+            history.add(input);
             parser.parse(input);
             try {
                 switch (parser.getCommandName()) {
@@ -156,14 +168,24 @@ public class Terminal {
                         System.out.println("> Current directory: " + currentDirectory.toString());
                         break;
                     case "ls":
+                        String[] paths = ls();
+                        for (String path : paths
+                        ) {
+                            System.out.println(path);
+                        }
                         break;
                     case "ls_r":
+                        paths = ls();
+                        for (int i = paths.length-1; i >= 0; i--) {
+                            System.out.println(paths[i]);
+                        }
                         break;
                     case "mkdir":
                         break;
                     case "rmdir":
                         break;
                     case "touch":
+                        touch(parser.getArgs()[0]);
                         break;
                     case "cp":
                         break;
@@ -174,6 +196,9 @@ public class Terminal {
                     case "cat":
                         break;
                     case "history":
+                        for (int i = 0; i < history.size(); i++){
+                            System.out.println(i+1+". "+history.get(i));
+                        }
                         break;
                     case "exit":
                         scanner.close();
@@ -181,7 +206,7 @@ public class Terminal {
                     default:
                         throw new Error("Command not found");
                 }
-            } catch (Error error) {
+            } catch (Error | IOException error) {
                 System.out.println("> " + error.getMessage());
             }
         }
