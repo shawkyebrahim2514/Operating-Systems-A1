@@ -7,7 +7,6 @@ import java.util.Scanner;
 import java.util.Vector;
 
 class Parser {
-    // Take care of this case: echo -r
     String commandName;
     String[] args;
 
@@ -97,13 +96,11 @@ public class Terminal {
     public static void mkdir(String[] args) {
         for (String arg : args) {
             File directory = new File(arg);
-
             // Check if the argument is a valid directory name or path
             if (!directory.isAbsolute()) {
                 // If it's not an absolute path, create the directory in the current directory
                 directory = new File(currentDirectory.toFile(), arg);
             }
-
             // check if the directory is created successfully.
             if (!directory.mkdirs()) {
                 throw new Error("Failed to create directory: " + directory.getAbsolutePath());
@@ -150,12 +147,72 @@ public class Terminal {
         }
     }
 
-    public void cp(String first, String second) {
+    public static void cp(String first, String second) {
+        if (!first.contains(":")) {
+            first = Paths.get(currentDirectory.toString(), first).toString();
+        }
+        if (!second.contains(":")) {
+            second = Paths.get(currentDirectory.toString(), second).toString();
+        }
+        try {
+            File source = new File(first);
+            File destination = new File(second);
+            Files.write(destination.toPath(), Files.readAllBytes(source.toPath()), StandardOpenOption.APPEND);
+            System.out.println("File appended successfully.");
+        } catch (IOException e) {
+            System.out.println("Error appending file: " + e.getMessage());
+        }
+    }
+    
+    public static void cp_r(String first, String second) {
+        if (!first.contains(":")) {
+            first = Paths.get(currentDirectory.toString(), first).toString();
+        }
+        if (!second.contains(":")) {
+            second = Paths.get(currentDirectory.toString(), second).toString();
+        }
+        try {
+            File sourceDir = new File(first);
+            File destinationDir = new File(second);
+            copyDirectory(sourceDir, destinationDir);
+            System.out.println("Directory copied successfully.");
+        } catch (IOException e) {
+            System.out.println("Error copying directory: " + e.getMessage());
+        }
     }
 
-    public void cp_r(String first, String second) {
-    }
+    private static void copyDirectory(File source, File destination) throws IOException {
+        if (source.isDirectory()) {
+            if (!destination.exists()) {
+                destination.mkdir();
+            }
 
+            String[] children = source.list();
+            for (String child : children) {
+                copyDirectory(new File(source, child), new File(destination, child));
+            }
+        } else {
+            InputStream in = null;
+            OutputStream out = null;
+            try {
+                in = new FileInputStream(source);
+                out = new FileOutputStream(destination);
+
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, length);
+                }
+            } finally {
+                if (in != null) {
+                    in.close();
+                }
+                if (out != null) {
+                    out.close();
+                }
+            }
+        }
+    }
     public static void rm(String arg) {
         File file = new File(currentDirectory.toFile(), arg);
         if (file.exists() && file.isFile()) {
@@ -166,13 +223,48 @@ public class Terminal {
             throw new Error("File does not exist: " + file.getAbsolutePath());
         }
     }
-
-    public String cat(String arg) {
-        return null;
+  
+    public void rm(String arg) {
     }
 
-    public String cat(String first, String second) {
-        return null;
+    public static void cat(String arg) {
+        if (!arg.contains(":")) {
+            arg = Paths.get(currentDirectory.toString(), arg).toString();
+        }
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(arg));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            reader.close();
+        } catch (IOException e) {
+            throw new Error("Error reading file: " + e.getMessage());
+        }
+    }
+  
+    public static void cat(String first, String second) {
+        if (!first.contains(":")) {
+            first = Paths.get(currentDirectory.toString(), first).toString();
+        }
+        if (!second.contains(":")) {
+            second = Paths.get(currentDirectory.toString(), second).toString();
+        }
+        try {
+            BufferedReader reader1 = new BufferedReader(new FileReader(first));
+            BufferedReader reader2 = new BufferedReader(new FileReader(second));
+            String line;
+            while ((line = reader1.readLine()) != null) {
+                System.out.println(line);
+            }
+            while ((line = reader2.readLine()) != null) {
+                System.out.println(line);
+            }
+            reader1.close();
+            reader2.close();
+        } catch (IOException e) {
+            throw new Error("Error reading file: " + e.getMessage());
+        }
     }
 
     public void exit() {
@@ -234,13 +326,20 @@ public class Terminal {
                         touch(parser.getArgs()[0]);
                         break;
                     case "cp":
+                        cp(parser.getArgs()[0],parser.getArgs()[1]);
                         break;
                     case "cp_r":
+                        cp_r(parser.getArgs()[0],parser.getArgs()[1]);
                         break;
                     case "rm":
                         rm(parser.getArgs()[0]);
                         break;
                     case "cat":
+                        if(parser.getArgs().length == 1) {
+                            cat(parser.getArgs()[0]);
+                        }else{
+                            cat(parser.getArgs()[0], parser.getArgs()[1]);
+                        }
                         break;
                     case "history":
                         for (int i = 0; i < history.size(); i++) {
