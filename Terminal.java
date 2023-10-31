@@ -93,7 +93,7 @@ public class Terminal {
             result[i] = matchingFiles[i].getName();
         return result;
     }
-
+  
     public static void mkdir(String[] args) {
         for (String arg : args) {
             File directory = new File(arg);
@@ -109,7 +109,6 @@ public class Terminal {
                 throw new Error("Failed to create directory: " + directory.getAbsolutePath());
             }
         }
-
     }
 
     public static void rmdir(String arg) {
@@ -179,7 +178,6 @@ public class Terminal {
     public void exit() {
     }
 
-    // ...
     // This method will choose the suitable command method to be called
     public void chooseCommandAction() {
 
