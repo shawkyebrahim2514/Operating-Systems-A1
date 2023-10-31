@@ -93,22 +93,59 @@ public class Terminal {
             result[i] = matchingFiles[i].getName();
         return result;
     }
+  
+    public static void mkdir(String[] args) {
+        for (String arg : args) {
+            File directory = new File(arg);
 
-    public void mkdir(String[] args) {
+            // Check if the argument is a valid directory name or path
+            if (!directory.isAbsolute()) {
+                // If it's not an absolute path, create the directory in the current directory
+                directory = new File(currentDirectory.toFile(), arg);
+            }
+
+            // check if the directory is created successfully.
+            if (!directory.mkdirs()) {
+                throw new Error("Failed to create directory: " + directory.getAbsolutePath());
+            }
+        }
     }
 
-    public void rmdir(String arg) {
+    public static void rmdir(String arg) {
+        if (arg.equals("*")) {
+            // Case 1: Remove all empty directories in the current directory
+            File[] subdirectories = currentDirectory.toFile().listFiles(File::isDirectory);
+            if (subdirectories != null) {
+                for (File directory : subdirectories) {
+                    if (directory.isDirectory() && directory.list().length == 0) {
+                        if (!directory.delete()){
+                            throw new Error("Failed to remove directory: " + directory.getAbsolutePath());
+                        }
+                    }
+                }
+            }
+        } else {
+            // Case 2: Remove a specific empty directory specified by the path
+            File directory = new File(currentDirectory.toFile(), arg);
+            // Check if the directory is empty
+            if (directory.isDirectory() && directory.list().length == 0) {
+                if (!directory.delete()){
+                    throw new Error("Failed to remove directory: " + directory.getAbsolutePath());
+                }
+            } else {
+                throw new Error("Directory is not empty or does not exist: " + directory.getAbsolutePath());
+            }
+        }
     }
 
     public static void touch(String arg) throws IOException {
-        if(!arg.contains(":")){
+        if (!arg.contains(":")) {
             arg = Paths.get(currentDirectory.toString(), arg).toString();
         }
         File f = new File(arg);
         try {
             f.createNewFile();
-        }
-        catch (IOException error){
+        } catch (IOException error) {
             throw new IOException("Couldn't create file");
         }
     }
@@ -119,7 +156,15 @@ public class Terminal {
     public void cp_r(String first, String second) {
     }
 
-    public void rm(String arg) {
+    public static void rm(String arg) {
+        File file = new File(currentDirectory.toFile(), arg);
+        if (file.exists() && file.isFile()) {
+            if (!file.delete()){
+                throw new Error("Failed to remove file: " + file.getAbsolutePath());
+            }
+        } else {
+            throw new Error("File does not exist: " + file.getAbsolutePath());
+        }
     }
 
     public String cat(String arg) {
@@ -133,7 +178,6 @@ public class Terminal {
     public void exit() {
     }
 
-    // ...
     // This method will choose the suitable command method to be called
     public void chooseCommandAction() {
 
@@ -176,13 +220,15 @@ public class Terminal {
                         break;
                     case "ls_r":
                         paths = ls();
-                        for (int i = paths.length-1; i >= 0; i--) {
+                        for (int i = paths.length - 1; i >= 0; i--) {
                             System.out.println(paths[i]);
                         }
                         break;
                     case "mkdir":
+                        mkdir(parser.getArgs());
                         break;
                     case "rmdir":
+                        rmdir(parser.getArgs()[0]);
                         break;
                     case "touch":
                         touch(parser.getArgs()[0]);
@@ -192,12 +238,13 @@ public class Terminal {
                     case "cp_r":
                         break;
                     case "rm":
+                        rm(parser.getArgs()[0]);
                         break;
                     case "cat":
                         break;
                     case "history":
-                        for (int i = 0; i < history.size(); i++){
-                            System.out.println(i+1+". "+history.get(i));
+                        for (int i = 0; i < history.size(); i++) {
+                            System.out.println(i + 1 + ". " + history.get(i));
                         }
                         break;
                     case "exit":
