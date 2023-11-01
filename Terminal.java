@@ -162,7 +162,6 @@ public class Terminal {
         }
         try {
             Files.write(destination.toPath(), Files.readAllBytes(source.toPath()), StandardOpenOption.APPEND);
-            System.out.println("> File appended successfully.");
         } catch (IOException e) {
             throw new Error("Error appending file: " + e.getMessage());
         }
@@ -179,7 +178,6 @@ public class Terminal {
         }
         try {
             copyDirectory(sourceDir, destinationDir);
-            System.out.println("> Directory copied successfully.");
         } catch (IOException e) {
             throw new Error("Error copying directory: " + e.getMessage());
         }
@@ -276,66 +274,104 @@ public class Terminal {
         scanner.close();
     }
 
+    public static void checkNull(String[] args) {
+        if (args != null) {
+            throw new Error("Invalid argument, no argument is allowed");
+        }
+    }
+
+    public static void checkNotNull(String[] args) {
+        if (args == null) {
+            throw new Error("Invalid argument, at least one argument is required");
+        }
+    }
+
+    public static void checkCertainLength(String[] args, int length) {
+        if (args == null || args.length != length) {
+            throw new Error("Invalid argument, only " + length + " arguments are allowed");
+        }
+    }
+
+    public static void checkCertainRange(String[] args, int min, int max) {
+        if (args == null || args.length < min || args.length > max) {
+            throw new Error("Invalid argument, only " + min + " to " + max + " arguments are allowed");
+        }
+    }
+
     // This method will choose the suitable command method to be called
     public static void chooseCommandAction() {
         while (true) {
+            System.out.print("> ");
             String input = scanner.nextLine();
             history.add(input);
             parser.parse(input);
             try {
+                String[] parserArgs = parser.getArgs();
                 switch (parser.getCommandName()) {
                     case "echo":
-                        if (parser.getArgs() == null) {
-                            throw new Error("Missing argument");
-                        }
-                        System.out.println("> " + echo(parser.getArgs()[0]));
+                        checkCertainLength(parserArgs, 1);
+                        System.out.println(echo(parserArgs[0]));
                         break;
                     case "pwd":
-                        System.out.println("> " + pwd());
+                        checkNull(parserArgs);
+                        System.out.println(pwd());
                         break;
                     case "cd":
-                        if (parser.getArgs() == null) {
+                        if (parserArgs == null) {
                             cd();
+                        } else if (parserArgs.length == 1) {
+                            cd(parserArgs[0]);
                         } else {
-                            cd(parser.getArgs()[0]);
+                            throw new Error("Invalid argument, only one or no argument is allowed");
                         }
-                        System.out.println("> Current directory: " + currentDirectoryPath.toString());
                         break;
                     case "ls":
+                        checkNull(parserArgs);
                         String[] paths = ls();
                         for (String path : paths) {
                             System.out.println(path);
                         }
                         break;
                     case "ls_r":
+                        checkCertainLength(parserArgs, 0);
                         paths = ls();
                         for (int i = paths.length - 1; i >= 0; i--) {
                             System.out.println(paths[i]);
                         }
                         break;
                     case "mkdir":
-                        mkdir(parser.getArgs());
+                        checkNotNull(parserArgs);
+                        mkdir(parserArgs);
                         break;
                     case "rmdir":
-                        rmdir(parser.getArgs()[0]);
+                        checkCertainLength(parserArgs, 1);
+                        rmdir(parserArgs[0]);
                         break;
                     case "touch":
-                        touch(parser.getArgs()[0]);
+                        checkCertainLength(parserArgs, 1);
+                        touch(parserArgs[0]);
                         break;
                     case "cp":
-                        cp(parser.getArgs()[0], parser.getArgs()[1]);
+                        checkCertainLength(parserArgs, 2);
+                        cp(parserArgs[0], parserArgs[1]);
                         break;
                     case "cp_r":
-                        cp_r(parser.getArgs()[0], parser.getArgs()[1]);
+                        checkCertainLength(parserArgs, 2);
+                        cp_r(parserArgs[0], parserArgs[1]);
                         break;
                     case "rm":
-                        rm(parser.getArgs()[0]);
+                        checkCertainLength(parserArgs, 1);
+                        if (parserArgs.length != 1) {
+                            throw new Error("Invalid argument, only one argument is allowed");
+                        }
+                        rm(parserArgs[0]);
                         break;
                     case "cat":
-                        if (parser.getArgs().length == 1) {
-                            cat(parser.getArgs()[0]);
+                        checkCertainRange(parserArgs, 1, 2);
+                        if (parserArgs.length == 1) {
+                            cat(parserArgs[0]);
                         } else {
-                            cat(parser.getArgs()[0], parser.getArgs()[1]);
+                            cat(parserArgs[0], parserArgs[1]);
                         }
                         break;
                     case "history":
@@ -350,7 +386,7 @@ public class Terminal {
                         throw new Error("Command not found");
                 }
             } catch (Error | IOException error) {
-                System.out.println("> " + error.getMessage());
+                System.out.println("Error: " + error.getMessage());
             }
         }
     }
