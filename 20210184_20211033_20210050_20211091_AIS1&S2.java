@@ -50,7 +50,7 @@ class Parser {
     }
 }
 
-public class Terminal {
+class Terminal {
     static Parser parser;
     static Path currentDirectoryPath;
     static Scanner scanner;
